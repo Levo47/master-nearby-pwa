@@ -95,7 +95,7 @@ geoBtn.addEventListener("click", () => {
   );
 });
 
-searchBtn.addEventListener("click", () => {
+searchBtn.addEventListener("click", async () => {
   if (!userPos) return;
 
   const service = serviceSelect.value;
@@ -104,7 +104,7 @@ searchBtn.addEventListener("click", () => {
   setStatus("Ищу мастеров рядом…");
   resultsEl.innerHTML = "";
 
-  const masters = mockMasters(service).filter(m => m.distanceKm <= radiusKm).slice(0, 5);
+  const masters = await fetchMasters(service, radiusKm, userPos);
 
   if (!masters.length) {
     setStatus("Пока нет мастеров в этом радиусе.");
@@ -153,4 +153,12 @@ function mockMasters(service) {
   ];
 
   return all.filter(m => m.service === service);
+}
+
+async function fetchMasters(service, radiusKm, pos) {
+  const url = `/api/masters?service=${encodeURIComponent(service)}&radius_km=${encodeURIComponent(radiusKm)}&lat=${encodeURIComponent(pos.lat)}&lng=${encodeURIComponent(pos.lng)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const data = await res.json();
+  return (data.items || []).slice(0, 5);
 }
