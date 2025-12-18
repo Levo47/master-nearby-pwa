@@ -1,0 +1,6 @@
+/* styles */
+nano manifest.webmanifest
+{}
+nano sw.js
+// service worker
+python3 -m http.server 5173

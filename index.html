@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>Мастер рядом</title>
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>Мастер рядом</h1>
+    <p class="muted">Локально. Без рекламы. Быстрый контакт.</p>
+
+    <div class="card">
+      <div class="row">
+        <label class="field">
+          <span>Услуга</span>
+          <select id="serviceSelect">
+            <option value="plumber">Сантехник</option>
+            <option value="electrician">Электрик</option>
+            <option value="furniture">Сборка мебели</option>
+            <option value="handyman">Бытовой ремонт</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Радиус</span>
+          <select id="radiusSelect">
+            <option value="1">1 км</option>
+            <option value="2" selected>2 км</option>
+            <option value="3">3 км</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="geoBtn">📍 Определить местоположение</button>
+        <button id="searchBtn" class="primary" disabled>Найти мастеров</button>
+      </div>
+
+      <pre id="status" class="status"></pre>
+    </div>
+
+    <div class="card">
+      <h2>Результаты</h2>
+      <div id="results" class="list"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
