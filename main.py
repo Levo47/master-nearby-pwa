@@ -8,7 +8,8 @@ from pathlib import Path
 
 app = FastAPI()
 DB_PATH = Path("masters.db")
-ADMIN_TOKEN = "change-me-123"
+import os
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "change-me-123")
 
 def connect():
     conn = sqlite3.connect(DB_PATH)

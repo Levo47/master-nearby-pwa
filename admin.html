@@ -9,16 +9,18 @@
 <body>
   <div class="wrap">
     <h1>Админка</h1>
-    <p class="muted">Добавить мастера в базу (SQLite) через API.</p>
+    <p class="muted">Добавление, просмотр и удаление мастеров (SQLite).</p>
 
     <div class="card">
       <div class="row">
-        <label class="field"><span>Имя</span><input id="name" /></label>
-        <label class="field"><span>Телефон</span><input id="phone" /></label>
+        <label class="field"><span>Admin token</span><input id="token" placeholder="ADMIN_TOKEN"/></label>
       </div>
 
+      <h2>Добавить мастера</h2>
+
       <div class="row">
-        <label class="field"><span>Admin token</span><input id="token" placeholder="change-me-123" /></label>
+        <label class="field"><span>Имя</span><input id="name" /></label>
+        <label class="field"><span>Телефон</span><input id="phone" /></label>
       </div>
 
       <div class="row">
@@ -57,18 +59,27 @@
       <div class="row">
         <button id="fillGeo">📍 Вставить мои координаты</button>
         <button id="save" class="primary">Сохранить</button>
+        <button id="refresh">Обновить список</button>
       </div>
 
       <pre id="status" class="status"></pre>
-      <p class="muted">Открыть основное приложение: <a class="action" href="/">/</a></p>
+      <p class="muted">Открыть приложение: <a class="action" href="/">/</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Мастера (до 200)</h2>
+      <div id="list" class="list"></div>
     </div>
   </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
+const listEl = $("list");
 
+function token() { return $("token").value.trim(); }
 function setStatus(msg){ statusEl.textContent = msg || ""; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 $("fillGeo").addEventListener("click", () => {
   if (!navigator.geolocation) return setStatus("Геолокация недоступна.");
@@ -95,21 +106,63 @@ $("save").addEventListener("click", async () => {
     };
 
     setStatus("Сохраняю…");
-
     const res = await fetch("/api/masters", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Admin-Token": 20 20 12 61 79 80 81 98 33 100 204 250 395 398 399 400 701"token").value.trim() },
+      headers: { "Content-Type": "application/json", "X-Admin-Token": token() },
       body: JSON.stringify(payload)
     });
-
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(JSON.stringify(data));
-
     setStatus("Сохранено ✅ id=" + data.id);
+    await refreshList();
   } catch (e) {
     setStatus("Ошибка: " + e.message);
   }
 });
+
+$("refresh").addEventListener("click", refreshList);
+
+async function refreshList(){
+  listEl.innerHTML = "";
+  setStatus("Загружаю список…");
+  const res = await fetch("/api/admin/masters", { headers: { "X-Admin-Token": token() }});
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { setStatus("Ошибка списка: " + JSON.stringify(data)); return; }
+  setStatus("Ок ✅");
+
+  (data.items || []).forEach(m => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div class="top">
+        <strong>#${m.id} ${esc(m.name)}</strong>
+        <span class="badge">${m.service} · ${m.is_verified ? "✅ verified" : "—"}</span>
+      </div>
+      <div class="muted">${esc(m.tagline || "")}</div>
+      <div class="muted">⭐ ${Number(m.rating).toFixed(1)} · ${m.jobs} заказов · от ${m.price_from} · ${m.phone}</div>
+      <div class="muted">(${m.lat}, ${m.lng})</div>
+      <div class="actions">
+        <a class="action" href="tel:${esc(m.phone)}">Позвонить</a>
+        <a class="action" data-del="${m.id}" href="#">Удалить</a>
+      </div>
+    `;
+    div.querySelector('[data-del]')?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!confirm("Удалить мастера #" + m.id + "?")) return;
+      const delRes = await fetch("/api/admin/masters/" + m.id, {
+        method: "DELETE",
+        headers: { "X-Admin-Token": token() }
+      });
+      const delData = await delRes.json().catch(() => ({}));
+      if (!delRes.ok) { setStatus("Ошибка удаления: " + JSON.stringify(delData)); return; }
+      setStatus("Удалено ✅");
+      await refreshList();
+    });
+    listEl.appendChild(div);
+  });
+}
+
+refreshList();
 </script>
 </body>
 </html>
