@@ -1,4 +1,4 @@
-const CACHE_NAME = "master-nearby-v1";
+const CACHE_NAME = "master-nearby-v3";
 const ASSETS = [
   "/",
   "/index.html",
