@@ -165,3 +165,17 @@ def admin_migrate(x_admin_token: str | None = __import__("fastapi").Header(defau
     conn.commit()
     conn.close()
     return {"ok": True}
+
+@app.post("/api/admin/migrate")
+def admin_migrate(x_admin_token: str | None = __import__("fastapi").Header(default=None, alias="X-Admin-Token")):
+    if x_admin_token != ADMIN_TOKEN:
+        raise __import__("fastapi").HTTPException(status_code=401, detail="Invalid admin token")
+    conn = connect()
+    cur = conn.cursor()
+    try: cur.execute("ALTER TABLE masters ADD COLUMN email TEXT;")
+    except Exception: pass
+    try: cur.execute("ALTER TABLE masters ADD COLUMN auth_token TEXT;")
+    except Exception: pass
+    conn.commit()
+    conn.close()
+    return {"ok": True}
