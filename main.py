@@ -145,5 +145,8 @@ def get_masters(
     items.sort(key=lambda x: (not x["isVerified"], -x["rating"], x["distanceKm"]))
     return {"items": items[:5]}
 
+from sumsub_routes import register_sumsub
+register_sumsub(app, connect)
+
 # Статика после API
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
