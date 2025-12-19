@@ -137,6 +137,8 @@ def get_masters(
                 "priceFrom": int(r["price_from"]),
                 "tagline": r["tagline"],
                 "distanceKm": round(dist, 2),
+                "lat": float(r["lat"]),
+                "lng": float(r["lng"]),
                 "isVerified": bool(r["is_verified"]),
             })
 
