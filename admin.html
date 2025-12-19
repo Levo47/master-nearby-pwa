@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Админка — Мастер рядом</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Админка</h1>
+    <p class="muted">Добавить мастера в базу (SQLite) через API.</p>
+
+    <div class="card">
+      <div class="row">
+        <label class="field"><span>Имя</span><input id="name" /></label>
+        <label class="field"><span>Телефон</span><input id="phone" /></label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span>Услуга</span>
+          <select id="service">
+            <option value="plumber">Сантехник</option>
+            <option value="electrician">Электрик</option>
+            <option value="furniture">Сборка мебели</option>
+            <option value="handyman">Мастер на час</option>
+          </select>
+        </label>
+
+        <label class="field"><span>Цена от</span><input id="priceFrom" type="number" value="50"/></label>
+      </div>
+
+      <div class="row">
+        <label class="field"><span>Rating (0–5)</span><input id="rating" type="number" step="0.1" value="4.6"/></label>
+        <label class="field"><span>Заказов</span><input id="jobs" type="number" value="0"/></label>
+      </div>
+
+      <div class="row">
+        <label class="field"><span>Широта (lat)</span><input id="lat" type="number" step="0.0001" placeholder="52.52"/></label>
+        <label class="field"><span>Долгота (lng)</span><input id="lng" type="number" step="0.0001" placeholder="13.405"/></label>
+      </div>
+
+      <label class="field">
+        <span>Описание</span>
+        <input id="tagline" placeholder="Напр. Приезжаю быстро" />
+      </label>
+
+      <label class="field" style="margin-top:10px;">
+        <span><input id="isVerified" type="checkbox"/> Проверен</span>
+      </label>
+
+      <div class="row">
+        <button id="fillGeo">📍 Вставить мои координаты</button>
+        <button id="save" class="primary">Сохранить</button>
+      </div>
+
+      <pre id="status" class="status"></pre>
+      <p class="muted">Открыть основное приложение: <a class="action" href="/">/</a></p>
+    </div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+
+function setStatus(msg){ statusEl.textContent = msg || ""; }
+
+$("fillGeo").addEventListener("click", () => {
+  if (!navigator.geolocation) return setStatus("Геолокация недоступна.");
+  setStatus("Определяю координаты…");
+  navigator.geolocation.getCurrentPosition(
+    (p) => { $("lat").value = p.coords.latitude; $("lng").value = p.coords.longitude; setStatus("Готово ✅"); },
+    () => setStatus("Не удалось получить геолокацию.")
+  );
+});
+
+$("save").addEventListener("click", async () => {
+  try {
+    const payload = {
+      name: $("name").value.trim(),
+      phone: $("phone").value.trim(),
+      service: $("service").value,
+      priceFrom: Number($("priceFrom").value || 0),
+      rating: Number($("rating").value || 4.5),
+      jobs: Number($("jobs").value || 0),
+      tagline: $("tagline").value.trim(),
+      lat: Number($("lat").value),
+      lng: Number($("lng").value),
+      isVerified: $("isVerified").checked
+    };
+
+    setStatus("Сохраняю…");
+
+    const res = await fetch("/api/masters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(JSON.stringify(data));
+
+    setStatus("Сохранено ✅ id=" + data.id);
+  } catch (e) {
+    setStatus("Ошибка: " + e.message);
+  }
+});
+</script>
+</body>
+</html>
