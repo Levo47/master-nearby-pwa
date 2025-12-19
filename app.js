@@ -59,6 +59,7 @@ const statusEl = document.getElementById("status");
 const resultsEl = document.getElementById("results");
 const serviceSelect = document.getElementById("serviceSelect");
 const radiusSelect = document.getElementById("radiusSelect");
+const verifiedOnlyEl = document.getElementById("verifiedOnly");
 
 let userPos = null;
 
@@ -100,11 +101,12 @@ searchBtn.addEventListener("click", async () => {
 
   const service = serviceSelect.value;
   const radiusKm = Number(radiusSelect.value);
+  const verifiedOnly = !!verifiedOnlyEl?.checked;
 
   setStatus("Ищу мастеров рядом…");
   resultsEl.innerHTML = "";
 
-  const masters = await fetchMasters(service, radiusKm, userPos);
+  const masters = await fetchMasters(service, radiusKm, userPos, verifiedOnly);
 
   if (!masters.length) {
     setStatus("Пока нет мастеров в этом радиусе.");

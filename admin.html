@@ -18,6 +18,10 @@
       </div>
 
       <div class="row">
+        <label class="field"><span>Admin token</span><input id="token" placeholder="change-me-123" /></label>
+      </div>
+
+      <div class="row">
         <label class="field">
           <span>Услуга</span>
           <select id="service">
@@ -94,7 +98,7 @@ $("save").addEventListener("click", async () => {
 
     const res = await fetch("/api/masters", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Admin-Token": 20 20 12 61 79 80 81 98 33 100 204 250 395 398 399 400 701"token").value.trim() },
       body: JSON.stringify(payload)
     });
 

@@ -8,6 +8,7 @@ from pathlib import Path
 
 app = FastAPI()
 DB_PATH = Path("masters.db")
+ADMIN_TOKEN = "change-me-123"
 
 def connect():
     conn = sqlite3.connect(DB_PATH)
@@ -80,7 +81,9 @@ class MasterCreate(BaseModel):
     isVerified: bool = False
 
 @app.post("/api/masters")
-def create_master(m: MasterCreate):
+def create_master(m: MasterCreate, x_admin_token: str | None = __import__("fastapi").Header(default=None, alias="X-Admin-Token")):
+    if x_admin_token != ADMIN_TOKEN:
+        raise __import__("fastapi").HTTPException(status_code=401, detail="Invalid admin token")
     conn = connect()
     cur = conn.cursor()
     cur.execute("""
