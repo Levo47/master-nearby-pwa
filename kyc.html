@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Проверка личности — Мастер рядом</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.sumsub.com/websdk/sns-websdk-builder.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Проверка личности</h1>
+    <p class="muted">Пройди проверку, чтобы получить статус “Проверен ✅”.</p>
+
+    <div class="card">
+      <pre id="status" class="status"></pre>
+      <div id="sumsub-container"></div>
+      <p class="muted"><a class="action" href="/">Вернуться в приложение</a></p>
+    </div>
+  </div>
+
+<script>
+const statusEl = document.getElementById("status");
+function setStatus(t){ statusEl.textContent = t || ""; }
+
+async function fetchAccessToken() {
+  const masterId = Number(localStorage.getItem("masterId"));
+  const authToken = localStorage.getItem("authToken");
+  if (!masterId || !authToken) throw new Error("Нет данных мастера. Начни с /signup.html");
+
+  const res = await fetch("/api/kyc/sumsub-token", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ masterId, authToken })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(JSON.stringify(data));
+  return data.token; // Sumsub returns token :contentReference[oaicite:10]{index=10}
+}
+
+(async () => {
+  try {
+    setStatus("Получаю токен…");
+    const accessToken = await fetchAccessToken();
+
+    setStatus("Запускаю проверку…");
+    const snsWebSdkInstance = snsWebSdk.init(
+      accessToken,
+      () => fetchAccessToken() // token refresh callback :contentReference[oaicite:11]{index=11}
+    )
+    .withConf({
+      lang: "ru"
+    })
+    .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+    .on("message", (type, payload) => {
+      // полезно для дебага
+      // console.log(type, payload);
+    })
+    .build();
+
+    snsWebSdkInstance.launch("#sumsub-container");
+  } catch(e) {
+    setStatus("Ошибка: " + e.message);
+  }
+})();
+</script>
+</body>
+</html>

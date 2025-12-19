@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Стать мастером — Мастер рядом</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Стать мастером</h1>
+    <p class="muted">Заполни данные и пройди проверку личности (Sumsub), чтобы получить статус “Проверен”.</p>
+
+    <div class="card">
+      <label class="field"><span>Имя</span><input id="name"/></label>
+      <label class="field"><span>Телефон</span><input id="phone"/></label>
+      <label class="field"><span>Email (опционально)</span><input id="email"/></label>
+
+      <label class="field">
+        <span>Услуга</span>
+        <select id="service">
+          <option value="plumber">Сантехник</option>
+          <option value="electrician">Электрик</option>
+          <option value="furniture">Сборка мебели</option>
+          <option value="handyman">Мастер на час</option>
+        </select>
+      </label>
+
+      <div class="row">
+        <button id="geo">📍 Вставить мои координаты</button>
+        <button id="go" class="primary">Продолжить → Проверка</button>
+      </div>
+
+      <pre id="status" class="status"></pre>
+    </div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+let coords = null;
+
+function setStatus(t){ statusEl.textContent = t || ""; }
+
+$("geo").addEventListener("click", () => {
+  if (!navigator.geolocation) return setStatus("Геолокация недоступна.");
+  setStatus("Определяю координаты…");
+  navigator.geolocation.getCurrentPosition(
+    (p) => { coords = {lat: p.coords.latitude, lng: p.coords.longitude}; setStatus("Координаты получены ✅"); },
+    () => setStatus("Не удалось получить геолокацию.")
+  );
+});
+
+$("go").addEventListener("click", async () => {
+  try{
+    if(!coords) throw new Error("Нажми “Вставить мои координаты”");
+    const payload = {
+      name: $("name").value.trim(),
+      phone: $("phone").value.trim(),
+      email: $("email").value.trim() || null,
+      service: $("service").value,
+      lat: coords.lat,
+      lng: coords.lng
+    };
+    setStatus("Создаю профиль…");
+    const res = await fetch("/api/masters/signup", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(JSON.stringify(data));
+
+    localStorage.setItem("masterId", data.masterId);
+    localStorage.setItem("authToken", data.authToken);
+
+    location.href = "/kyc.html";
+  } catch(e){
+    setStatus("Ошибка: " + e.message);
+  }
+});
+</script>
+</body>
+</html>
