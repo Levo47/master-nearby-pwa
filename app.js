@@ -135,6 +135,15 @@ function renderMasters(list) {
         <a class="action" href="sms:${m.phone}">SMS</a>
       </div>
     `;
+    const copyLink = div.querySelector("\[data-copy\]");
+    if (copyLink) {
+      copyLink.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const ok = await copyToClipboard(m.phone);
+        setStatus(ok ? "Номер скопирован ✅" : "Не удалось скопировать (разрешения браузера)");
+      });
+    }
+
     resultsEl.appendChild(div);
   });
 }
@@ -163,4 +172,18 @@ async function fetchMasters(service, radiusKm, pos) {
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   const data = await res.json();
   return (data.items || []).slice(0, 5);
+}
+
+function normalizePhoneForWa(phone) {
+  // wa.me принимает только цифры (без +, пробелов, скобок)
+  return String(phone || "").replace(/[^\d]/g, "");
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
 }
