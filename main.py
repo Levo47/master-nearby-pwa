@@ -140,7 +140,7 @@ def get_masters(
                 "isVerified": bool(r["is_verified"]),
             })
 
-    items.sort(key=lambda x: x["distanceKm"])
+    items.sort(key=lambda x: (not x["isVerified"], -x["rating"], x["distanceKm"]))
     return {"items": items[:5]}
 
 # Статика после API
